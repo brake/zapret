@@ -9,6 +9,11 @@
 #include <errno.h>
 #include <fcntl.h>
 
+#ifndef IP_NODEFRAG
+// for very old toolchains
+#define IP_NODEFRAG     22
+#endif
+
 #include "darkmagic.h"
 #include "helpers.h"
 #include "params.h"
@@ -155,6 +160,8 @@ static void fill_udphdr(struct udphdr *udp, uint16_t nsport, uint16_t ndport, ui
 
 static void fill_iphdr(struct ip *ip, const struct in_addr *src, const struct in_addr *dst, uint16_t pktlen, uint8_t proto, uint8_t ttl)
 {
+	ip->ip_tos = 0;
+	ip->ip_sum = 0;
 	ip->ip_off = 0;
 	ip->ip_v = 4;
 	ip->ip_hl = 5;
