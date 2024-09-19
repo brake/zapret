@@ -206,6 +206,10 @@ nfqws takes the following parameters:
  --hostlist-auto-fail-time=<int>                ; all failed attemps must be within these seconds (default : 60)
  --hostlist-auto-retrans-threshold=<int>        ; how many request retransmissions cause attempt to fail (default : 3)
  --hostlist-auto-debug=<logfile>        	; debug auto hostlist positives
+ --new                                          ; begin new strategy
+ --filter-l3=ipv4|ipv6                          ; L3 protocol filter. multiple comma separated values allowed.
+ --filter-tcp=[~]port1[-port2]                  ; TCP port filter. ~ means negation. setting tcp and not setting udp filter denies udp.
+ --filter-udp=[~]port1[-port2]                  ; UDP port filter. ~ means negation. setting udp and not setting tcp filter denies tcp.
 ```
 
 The manipulation parameters can be combined in any way.
@@ -459,8 +463,8 @@ becomes the possible maximum. If you set `scale_factor` 64:0, it will be very sl
 
 On the other hand, the server response must not be large enough for the DPI to find what it is looking for.
 
-Hostlist filter does not affect `--wssize` because it works since the connection initiation when it's not yet possible
-to extract the host name.
+`--wssize` is not applied in desync profiles with hostlist filter because it works since the connection initiation when it's not yet possible
+to extract the host name. But it works with auto hostlist profiles.
 
 `--wssize` may slow down sites and/or increase response time. It's desired to use another methods if possible.
 
@@ -565,6 +569,32 @@ nfqws sees packets with internal network source address. If fragmented NAT does 
 This results in attempt to send packets to internet with internal IP address.
 You need to use nftables instead with hook priority 101 or higher.
 
+### multiple strategies
+
+`nfqws` can apply different strategies to different requests. It's done with multiple desync profiles.
+Profiles are delimited by the `--new` parameter. First profile is created automatically and does not require `--new`.
+Each profile has a filter. By default it's empty and profile matches any packet.
+Filter can have hard parameters : ip version and tcp/udp port range.
+Hard parameters are always identified unambiguously even on zero-phase when hostname is unknown yet.
+Hostlist can also act as a filter. They can be combined with hard parameters.
+When a packet comes profiles are matched from the first to the last until first filter condition match.
+Hard filter is matched first. If it does not match verification goes to the next profile.
+If a profile matches hard filter and has autohostlist it's selected immediately.
+If a profile matches hard filter and has normal hostlist(s) and hostname is unknown yet verification goes to the next profile.
+Otherwise profile hostlist(s) are checked for the hostname. If it matches profile is selected.
+Otherwise verification goes to the next profile.
+
+It's possible that before getting hostname connection is served by one profile and after
+hostname is revealed it's switched to another profile.
+If you use 0-phase desync methods think carefully what can happen during strategy switch.
+Use `--debug` logging to understand better what `nfqws` does.
+
+Profiles are numbered from 1 to N. There's last empty profile in the chain numbered 0.
+It's used when no filter matched.
+
+IMPORTANT : multiple strategies exist only for the case when it's not possible to combine all to one strategy.
+Copy-pasting blockcheck results of different websites to multiple strategies lead to the mess.
+This way you may never unblock all resources and only confuse yourself.
 
 ## tpws
 
@@ -932,6 +962,19 @@ If one of `NFQWS_OPT_DESYNC_HTTP6`/`NFQWS_OPT_DESYNC_HTTPS6` is not defined it t
 It means if only `NFQWS_OPT_DESYNC` is defined all four take its value.
 
 If a variable is not defined, the value `NFQWS_OPT_DESYNC` is taken.
+
+Additional low priority desync profile for `MODE_FILTER=hostlist`.
+With multiple profile support 0-phase desync methods are no more applied with hostlist !
+To apply them additional profile is required without hostlist filter.
+```
+#NFQWS_OPT_DESYNC_SUFFIX="--dpi-desync=syndata"
+#NFQWS_OPT_DESYNC_HTTP_SUFFIX="--dpi-desync=syndata"
+#NFQWS_OPT_DESYNC_HTTPS_SUFFIX="--wssize 1:6"
+#NFQWS_OPT_DESYNC_HTTP6_SUFFIX="--dpi-desync=syndata"
+#NFQWS_OPT_DESYNC_HTTPS6_SUFFIX="--wssize 1:6"
+```
+
+Defaults are filled the same ways as with NFQWS_OPT_*.
 
 Separate QUIC options for ip protocol versions :
 
