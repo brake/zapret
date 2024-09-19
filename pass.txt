@@ -21,3 +21,12 @@ vk.ru
 24h.tv
 kinopoisk.ru
 jetbrains.com
+nnmclub.to
+keenetic.zendesk.com
+duckduckgo.com
+dc1-st.ksn.kaspersky-labs.com
+dc1.ksn.kaspersky-labs.com
+dc1-file.ksn.kaspersky-labs.com
+worldtimeapi.org
+challenges.cloudflare.com
+kvantera.io

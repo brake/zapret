@@ -3,6 +3,7 @@
 google.com
 manifests.googlevideo.com
 googlevideo.com
+googleads.g.doubleclick.net
 youtu.be
 youtube.com
 ytimg.com
@@ -11,6 +12,7 @@ ytimg.l.google.com
 ytstatic.l.google.com
 youtubei.googleapis.com
 nhacmp3youtube.com
+www.youtube.com
 yt3.ggpht.com
 NS1.google.com
 NS2.google.com
@@ -40,6 +42,8 @@ facebook.com
 x.com
 twitter.com
 instagram.com
+scontent-hel3-1.cdninstagram.com
+scontent-arn2-1.cdninstagram.com
 ###Торрент-трекеры
 rutracker.org
 rutor.info
